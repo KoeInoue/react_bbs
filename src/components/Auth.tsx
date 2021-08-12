@@ -5,7 +5,6 @@ import styles from './Auth.module.css';
 import axios from '../common/axios';
 import { Avatar, Button, CssBaseline, TextField, Paper, Grid, Typography, makeStyles } from '@material-ui/core';
 import LockOutlinedIcon from '@material-ui/icons/LockOutlined';
-import AccountCircleIcon from '@material-ui/icons/AccountCircle';
 
 export const Auth: React.FC = () => {
   const classes = useStyles();
@@ -13,6 +12,8 @@ export const Auth: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoggedIn, setIsLoggedIn] = useState(true);
+  const [isSending, setIsSending] = useState(false);
+  const [isSent, setIsSent] = useState(false);
   const [errors, setErrors] = useState({ email: '', password: '' });
 
   const signIn = async () => {
@@ -23,12 +24,15 @@ export const Auth: React.FC = () => {
   const signUp = async () => {
     const params = new URLSearchParams();
     params.append('email', email);
+    setIsSending(true);
     axios.post('/api/pre-register/', params).then((res) => {
       if (res.data.errors) {
         setErrors(res.data.errors);
       } else {
         setErrors({ email: '', password: '' });
       }
+      setIsSending(false);
+      setIsSent(true);
     });
   };
 
@@ -43,80 +47,84 @@ export const Auth: React.FC = () => {
           <Typography component="h1" variant="h5">
             {isLoggedIn ? 'Login' : 'Pre Register'}
           </Typography>
-          <form className={classes.form} noValidate>
-            <TextField
-              variant="outlined"
-              margin="normal"
-              required
-              fullWidth
-              id="email"
-              label="Email Address"
-              name="email"
-              autoComplete="email"
-              autoFocus
-              value={email}
-              onChange={(e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) => {
-                setEmail(e.target.value);
-              }}
-            />
-            {errors.email && <span className={styles.red}>{`※${errors.email}`}</span>}
-            {isLoggedIn && (
+          {isSent ? (
+            <p className={classes.center}>Email was sent</p>
+          ) : (
+            <form className={classes.form} noValidate>
               <TextField
                 variant="outlined"
                 margin="normal"
                 required
                 fullWidth
-                name="password"
-                label="Password"
-                type="password"
-                id="password"
-                autoComplete="current-password"
-                value={password}
+                id="email"
+                label="Email Address"
+                name="email"
+                autoComplete="email"
+                autoFocus
+                value={email}
                 onChange={(e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) => {
-                  setPassword(e.target.value);
+                  setEmail(e.target.value);
                 }}
               />
-            )}
-            {errors.password && (
-              <span className={styles.red}>
-                {errors.password === 'min' ? '※required at least 6 characters' : `※${errors.password}`}
-              </span>
-            )}
-
-            <Button
-              disabled={isLoggedIn ? !email || password.length < 6 : !email}
-              fullWidth
-              variant="contained"
-              color="primary"
-              className={classes.submit}
-              onClick={
-                isLoggedIn
-                  ? async () => {
-                      try {
-                        await signIn();
-                      } catch (error) {
-                        alert(error.message);
-                      }
-                    }
-                  : async () => {
-                      try {
-                        await signUp();
-                      } catch (error) {
-                        alert(error.message);
-                      }
-                    }
-              }
-            >
-              {isLoggedIn ? 'Login' : 'Pre Register'}
-            </Button>
-            <Grid container>
-              <Grid item xs>
-                <span onClick={() => setIsLoggedIn(!isLoggedIn)} className={styles.login_toggleMode}>
-                  {isLoggedIn ? 'Create new account' : 'Back to Login'}
+              {errors.email && <span className={styles.red}>{`※${errors.email}`}</span>}
+              {isLoggedIn && (
+                <TextField
+                  variant="outlined"
+                  margin="normal"
+                  required
+                  fullWidth
+                  name="password"
+                  label="Password"
+                  type="password"
+                  id="password"
+                  autoComplete="current-password"
+                  value={password}
+                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) => {
+                    setPassword(e.target.value);
+                  }}
+                />
+              )}
+              {errors.password && (
+                <span className={styles.red}>
+                  {errors.password === 'min' ? '※required at least 6 characters' : `※${errors.password}`}
                 </span>
+              )}
+
+              <Button
+                disabled={isLoggedIn ? !email || password.length < 6 || isSending : !email || isSending}
+                fullWidth
+                variant="contained"
+                color="primary"
+                className={classes.submit}
+                onClick={
+                  isLoggedIn
+                    ? async () => {
+                        try {
+                          await signIn();
+                        } catch (error) {
+                          alert(error.message);
+                        }
+                      }
+                    : async () => {
+                        try {
+                          await signUp();
+                        } catch (error) {
+                          alert(error.message);
+                        }
+                      }
+                }
+              >
+                {isLoggedIn ? 'Login' : 'Pre Register'}
+              </Button>
+              <Grid container>
+                <Grid item xs>
+                  <span onClick={() => setIsLoggedIn(!isLoggedIn)} className={styles.login_toggleMode}>
+                    {isLoggedIn ? 'Create new account' : 'Back to Login'}
+                  </span>
+                </Grid>
               </Grid>
-            </Grid>
-          </form>
+            </form>
+          )}
         </div>
       </Grid>
     </Grid>
@@ -150,6 +158,10 @@ const useStyles = makeStyles((theme) => ({
   },
   submit: {
     margin: theme.spacing(3, 0, 2),
+  },
+  center: {
+    textAlign: 'center',
+    fontSize: '20px',
   },
 }));
 export default Auth;
