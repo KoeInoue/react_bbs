@@ -1,34 +1,47 @@
-import React, { ReactEventHandler, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import { login } from '../features/userSlice';
 import styles from './Auth.module.css';
 import axios from '../common/axios';
 import { Avatar, Button, CssBaseline, TextField, Paper, Grid, Typography, makeStyles } from '@material-ui/core';
+import { useParams } from 'react-router-dom';
 import LockOutlinedIcon from '@material-ui/icons/LockOutlined';
-import AccountCircleIcon from '@material-ui/icons/AccountCircle';
 
-export const Auth: React.FC = () => {
+type Param = {
+  token: string;
+};
+
+export const Register: React.FC = (props) => {
   const classes = useStyles();
   const dispatch = useDispatch();
+  const { token }: Param = useParams();
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isLoggedIn, setIsLoggedIn] = useState(true);
-  const [errors, setErrors] = useState({ email: '', password: '' });
-
-  const signIn = async () => {
-    // TODO ここでサーバーにアドレスとパスワードを送信する
-    // user data, tokenをストアに保存する
-  };
+  const [errors, setErrors] = useState({ name: '', email: '', password: '', token: '' });
 
   const signUp = async () => {
     const params = new URLSearchParams();
+    params.append('name', name);
     params.append('email', email);
-    axios.post('/api/pre-register/', params).then((res) => {
+    params.append('password', password);
+    params.append('token', token);
+    axios.post('/api/register/', params).then((res) => {
+      console.log(res.data);
       if (res.data.errors) {
         setErrors(res.data.errors);
       } else {
-        setErrors({ email: '', password: '' });
+        setErrors({ name: '', email: '', password: '', token: '' });
       }
+      // user data, をストアに保存する
+      // dispatch(
+      //   login({
+      //     id: 1,
+      //     name,
+      //     profileImgUrl:
+      //       'https://images.unsplash.com/photo-1524638431109-93d95c968f03?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=1234&q=80',
+      //   }),
+      // );
     });
   };
 
@@ -41,9 +54,25 @@ export const Auth: React.FC = () => {
             <LockOutlinedIcon />
           </Avatar>
           <Typography component="h1" variant="h5">
-            {isLoggedIn ? 'Login' : 'Pre Register'}
+            Register
           </Typography>
           <form className={classes.form} noValidate>
+            <TextField
+              variant="outlined"
+              margin="normal"
+              required
+              fullWidth
+              id="name"
+              label="Name"
+              name="name"
+              autoComplete="name"
+              autoFocus
+              value={name}
+              onChange={(e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) => {
+                setName(e.target.value);
+              }}
+            />
+            {errors.name && <span className={styles.red}>{`※${errors.name}`}</span>}
             <TextField
               variant="outlined"
               margin="normal"
@@ -60,79 +89,52 @@ export const Auth: React.FC = () => {
               }}
             />
             {errors.email && <span className={styles.red}>{`※${errors.email}`}</span>}
-            {isLoggedIn && (
-              <TextField
-                variant="outlined"
-                margin="normal"
-                required
-                fullWidth
-                name="password"
-                label="Password"
-                type="password"
-                id="password"
-                autoComplete="current-password"
-                value={password}
-                onChange={(e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) => {
-                  setPassword(e.target.value);
-                }}
-              />
-            )}
+            <TextField
+              variant="outlined"
+              margin="normal"
+              required
+              fullWidth
+              name="password"
+              label="Password"
+              type="password"
+              id="password"
+              autoComplete="current-password"
+              value={password}
+              onChange={(e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) => {
+                setPassword(e.target.value);
+              }}
+            />
             {errors.password && (
               <span className={styles.red}>
                 {errors.password === 'min' ? '※required at least 6 characters' : `※${errors.password}`}
               </span>
             )}
-
             <Button
-              disabled={isLoggedIn ? !email || password.length < 6 : !email}
+              disabled={!email || password.length < 6 || !name}
               fullWidth
               variant="contained"
               color="primary"
               className={classes.submit}
-              onClick={
-                isLoggedIn
-                  ? async () => {
-                      try {
-                        await signIn();
-                      } catch (error) {
-                        alert(error.message);
-                      }
-                    }
-                  : async () => {
-                      try {
-                        await signUp();
-                      } catch (error) {
-                        alert(error.message);
-                      }
-                    }
-              }
+              onClick={async () => {
+                try {
+                  await signUp();
+                } catch (error) {
+                  alert(error.message);
+                }
+              }}
             >
-              {isLoggedIn ? 'Login' : 'Pre Register'}
+              Register
             </Button>
-            <Grid container>
-              <Grid item xs>
-                <span onClick={() => setIsLoggedIn(!isLoggedIn)} className={styles.login_toggleMode}>
-                  {isLoggedIn ? 'Create new account' : 'Back to Login'}
-                </span>
-              </Grid>
-            </Grid>
           </form>
         </div>
       </Grid>
     </Grid>
   );
 };
+
 const useStyles = makeStyles((theme) => ({
   root: {
     height: '100vh',
-  },
-  image: {
-    backgroundImage:
-      'url(https://images.unsplash.com/photo-1619089941305-65d654dde46f?ixid=MnwxMjA3fDB8MHxlZGl0b3JpYWwtZmVlZHwxNDl8fHxlbnwwfHx8fA%3D%3D&ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=60)',
-    backgroundRepeat: 'no-repeat',
-    backgroundColor: theme.palette.type === 'light' ? theme.palette.grey[50] : theme.palette.grey[900],
-    backgroundSize: 'cover',
-    backgroundPosition: 'center',
   },
   paper: {
     margin: theme.spacing(8, 4),
@@ -152,4 +154,5 @@ const useStyles = makeStyles((theme) => ({
     margin: theme.spacing(3, 0, 2),
   },
 }));
-export default Auth;
+
+export default Register;
