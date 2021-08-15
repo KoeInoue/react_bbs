@@ -6,42 +6,68 @@ import axios from '../common/axios';
 import { Avatar, Button, CssBaseline, TextField, Paper, Grid, Typography, makeStyles } from '@material-ui/core';
 import { useParams } from 'react-router-dom';
 import LockOutlinedIcon from '@material-ui/icons/LockOutlined';
+import Swal from 'sweetalert2';
+import * as PropTypes from 'prop-types';
+import { withRouter } from 'react-router';
+import { useCookies } from 'react-cookie';
 
 type Param = {
   token: string;
 };
 
-export const Register: React.FC = (props) => {
+type propTypes = {
+  match: any;
+  location: any;
+  history: any;
+};
+
+export const Register: React.FC<propTypes> = (props) => {
+  const { match, location, history } = props;
   const classes = useStyles();
   const dispatch = useDispatch();
   const { token }: Param = useParams();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [errors, setErrors] = useState({ name: '', email: '', password: '', token: '' });
+  const [errors, setErrors] = useState({ name: '', password: '', token: '' });
+  const [cookies, setCookie] = useCookies(['auth']);
+
+  useEffect(() => {
+    if (errors.token) {
+      Swal.fire({
+        title: 'Error!',
+        text: errors.token,
+        icon: 'error',
+        confirmButtonText: 'Register Again',
+      }).then((result) => {
+        window.location.href = '/';
+      });
+    }
+  }, [errors.token]);
 
   const signUp = async () => {
     const params = new URLSearchParams();
     params.append('name', name);
-    params.append('email', email);
     params.append('password', password);
     params.append('token', token);
     axios.post('/api/register/', params).then((res) => {
-      console.log(res.data);
       if (res.data.errors) {
         setErrors(res.data.errors);
+        if (res.data.errors.account) {
+          Swal.fire({
+            title: 'Error!',
+            text: res.data.errors.account,
+            icon: 'error',
+            confirmButtonText: 'Login',
+          }).then(() => {
+            window.location.href = '/';
+          });
+        }
       } else {
-        setErrors({ name: '', email: '', password: '', token: '' });
+        setErrors({ name: '', password: '', token: '' });
+        setCookie('auth', res.data.token);
+        props.history.push('/home/');
       }
-      // user data, をストアに保存する
-      // dispatch(
-      //   login({
-      //     id: 1,
-      //     name,
-      //     profileImgUrl:
-      //       'https://images.unsplash.com/photo-1524638431109-93d95c968f03?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=1234&q=80',
-      //   }),
-      // );
     });
   };
 
@@ -78,22 +104,6 @@ export const Register: React.FC = (props) => {
               margin="normal"
               required
               fullWidth
-              id="email"
-              label="Email Address"
-              name="email"
-              autoComplete="email"
-              autoFocus
-              value={email}
-              onChange={(e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) => {
-                setEmail(e.target.value);
-              }}
-            />
-            {errors.email && <span className={styles.red}>{`※${errors.email}`}</span>}
-            <TextField
-              variant="outlined"
-              margin="normal"
-              required
-              fullWidth
               name="password"
               label="Password"
               type="password"
@@ -110,7 +120,7 @@ export const Register: React.FC = (props) => {
               </span>
             )}
             <Button
-              disabled={!email || password.length < 6 || !name}
+              disabled={password.length < 6 || !name}
               fullWidth
               variant="contained"
               color="primary"

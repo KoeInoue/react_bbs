@@ -2,32 +2,27 @@ import React, { useEffect, useContext } from 'react';
 import styles from './App.module.css';
 import { useSelector, useDispatch } from 'react-redux';
 import { selectUser, login, logout } from './features/userSlice';
-import { BrowserRouter, Route, Switch, Link, useLocation } from 'react-router-dom';
+import { BrowserRouter, Route, Switch, Link, Redirect } from 'react-router-dom';
 import { TransitionGroup, CSSTransition } from 'react-transition-group';
 import { Feeds } from './components/Feeds';
 import { Auth } from './components/Auth';
 import { Register } from './components/Register';
+import { useCookies } from 'react-cookie';
 
-const App: React.FC = () => {
+const App: React.FC = (props) => {
+  const [cookies, setCookie] = useCookies(['auth']);
   const user = useSelector(selectUser);
   const dispatch = useDispatch();
 
   return (
     <BrowserRouter>
-      {user.id ? (
+      {cookies.auth ? (
         <TransitionGroup>
           <CSSTransition classNames="fade" timeout={300}>
             <Switch>
-              <Route path="/home">
-                <div className={styles.app}>
-                  <Feeds />
-                </div>
-              </Route>
+              <Route path="/home" component={Feeds}></Route>
               <Route>
-                <div className={styles.center}>
-                  <h1>Not Found</h1>
-                  <Link to="/home">←Home</Link>
-                </div>
+                <Redirect to="/home" />
               </Route>
             </Switch>
           </CSSTransition>
@@ -36,10 +31,11 @@ const App: React.FC = () => {
         <TransitionGroup>
           <CSSTransition classNames="fade" timeout={300}>
             <Switch>
-              <Route exact path="/">
-                <Auth />
-              </Route>
+              <Route exact path="/" component={Auth} />
               <Route path="/register/:token" component={Register} />
+              <Route>
+                <Redirect to="/" />
+              </Route>
               <Route>
                 <div className={styles.center}>
                   <h1>Not Found</h1>

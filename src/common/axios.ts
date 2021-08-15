@@ -1,9 +1,8 @@
 import axios from 'axios';
-const http = axios.create({
-  // baseURL: 'http://localhost:8080/',
-});
+const http = axios.create({});
 axios.defaults.headers.post['Content-Type'] = 'application/json;charset=utf-8';
 axios.defaults.headers.post['Access-Control-Allow-Origin'] = '*';
+axios.defaults.withCredentials = true;
 
 http.interceptors.request.use(
   (config) => config,

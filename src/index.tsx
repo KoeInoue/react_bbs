@@ -4,13 +4,16 @@ import './index.css';
 import App from './App';
 import { store } from './app/store';
 import { Provider } from 'react-redux';
+import { CookiesProvider } from 'react-cookie';
 import * as serviceWorker from './serviceWorker';
 
 ReactDOM.render(
   <React.StrictMode>
-    <Provider store={store}>
-      <App />
-    </Provider>
+    <CookiesProvider>
+      <Provider store={store}>
+        <App />
+      </Provider>
+    </CookiesProvider>
   </React.StrictMode>,
   document.getElementById('root'),
 );

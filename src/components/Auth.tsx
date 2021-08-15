@@ -2,6 +2,7 @@ import React, { ReactEventHandler, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { login } from '../features/userSlice';
 import styles from './Auth.module.css';
+import validateEmail from '../common/validation';
 import axios from '../common/axios';
 import { Avatar, Button, CssBaseline, TextField, Paper, Grid, Typography, makeStyles } from '@material-ui/core';
 import LockOutlinedIcon from '@material-ui/icons/LockOutlined';
@@ -22,6 +23,11 @@ export const Auth: React.FC = () => {
   };
 
   const signUp = async () => {
+    if (!validateEmail(email)) {
+      setErrors({ email: 'invalid email format', password: '' });
+      return;
+    }
+
     const params = new URLSearchParams();
     params.append('email', email);
     setIsSending(true);
@@ -30,9 +36,9 @@ export const Auth: React.FC = () => {
         setErrors(res.data.errors);
       } else {
         setErrors({ email: '', password: '' });
+        setIsSent(true);
       }
       setIsSending(false);
-      setIsSent(true);
     });
   };
 
