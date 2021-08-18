@@ -19,14 +19,15 @@ import Drawer from '@material-ui/core/Drawer';
 import { Timeline } from './Timeline';
 import { CreatePost } from './CreatePost';
 import { Profile } from './Profile';
+import { RouteComponentProps } from 'react-router-dom';
 
-type propTypes = {
-  match: any;
-  location: any;
-  history: any;
+type Props = {
+  match: RouteComponentProps['match'];
+  location: RouteComponentProps['location'];
+  history: RouteComponentProps['history'];
 };
 
-export const Feeds: React.FC<propTypes> = (props) => {
+export const Feeds: React.VFC<Props> = (props) => {
   const [value, setValue] = useState(0);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const classes = useStyles();

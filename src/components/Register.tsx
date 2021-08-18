@@ -1,14 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
-import { login } from '../features/userSlice';
 import styles from './Auth.module.css';
 import axios from '../common/axios';
 import { Avatar, Button, CssBaseline, TextField, Paper, Grid, Typography, makeStyles } from '@material-ui/core';
-import { useParams } from 'react-router-dom';
+import { useParams, RouteComponentProps } from 'react-router-dom';
 import LockOutlinedIcon from '@material-ui/icons/LockOutlined';
 import Swal from 'sweetalert2';
-import * as PropTypes from 'prop-types';
-import { withRouter } from 'react-router';
 import { useCookies } from 'react-cookie';
 
 type Param = {
@@ -16,18 +13,15 @@ type Param = {
 };
 
 type propTypes = {
-  match: any;
-  location: any;
-  history: any;
+  match: RouteComponentProps['match'];
+  location: RouteComponentProps['location'];
+  history: RouteComponentProps['history'];
 };
 
-export const Register: React.FC<propTypes> = (props) => {
-  const { match, location, history } = props;
+export const Register: React.VFC<propTypes> = (props) => {
   const classes = useStyles();
-  const dispatch = useDispatch();
   const { token }: Param = useParams();
   const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState({ name: '', password: '', token: '' });
   const [cookies, setCookie] = useCookies(['auth']);

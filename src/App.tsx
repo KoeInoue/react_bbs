@@ -9,7 +9,7 @@ import { Auth } from './components/Auth';
 import { Register } from './components/Register';
 import { useCookies } from 'react-cookie';
 
-const App: React.FC = (props) => {
+const App: React.VFC = (props) => {
   const [cookies, setCookie] = useCookies(['auth']);
   const user = useSelector(selectUser);
   const dispatch = useDispatch();

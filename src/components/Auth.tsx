@@ -1,13 +1,22 @@
-import React, { ReactEventHandler, useState } from 'react';
+import React, { ReactEventHandler, useState, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
-import { login } from '../features/userSlice';
 import styles from './Auth.module.css';
 import validateEmail from '../common/validation';
 import axios from '../common/axios';
 import { Avatar, Button, CssBaseline, TextField, Paper, Grid, Typography, makeStyles } from '@material-ui/core';
 import LockOutlinedIcon from '@material-ui/icons/LockOutlined';
+import MuiAlert, { AlertProps } from '@material-ui/lab/Alert';
+import Snackbar from '@material-ui/core/Snackbar';
+import { useCookies } from 'react-cookie';
+import { RouteComponentProps } from 'react-router-dom';
 
-export const Auth: React.FC = () => {
+type propTypes = {
+  match: RouteComponentProps['match'];
+  location: RouteComponentProps['location'];
+  history: RouteComponentProps['history'];
+};
+
+export const Auth: React.VFC<propTypes> = (props) => {
   const classes = useStyles();
   const dispatch = useDispatch();
   const [email, setEmail] = useState('');
@@ -15,16 +24,36 @@ export const Auth: React.FC = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(true);
   const [isSending, setIsSending] = useState(false);
   const [isSent, setIsSent] = useState(false);
-  const [errors, setErrors] = useState({ email: '', password: '' });
+  const [errors, setErrors] = useState({ email: '', password: '', account: '' });
+  const [isOpenErr, setIsOpenErr] = useState(false);
+  const [cookies, setCookie] = useCookies(['auth']);
 
   const signIn = async () => {
-    // TODO ここでサーバーにアドレスとパスワードを送信する
-    // user data, tokenをストアに保存する
+    if (!validateEmail(email)) {
+      errors.email = 'invalid email format';
+      return;
+    }
+    const params = new URLSearchParams();
+    params.append('email', email);
+    params.append('password', password);
+    setIsSending(true);
+    axios.post('/api/login/', params).then((res) => {
+      if (res.data.errors) {
+        setErrors(res.data.errors);
+        setIsSending(false);
+        setIsOpenErr(true);
+      } else {
+        setErrors({ email: '', password: '', account: '' });
+      }
+      setIsSending(false);
+      setCookie('auth', res.data.token);
+      props.history.push('/home/');
+    });
   };
 
   const signUp = async () => {
     if (!validateEmail(email)) {
-      setErrors({ email: 'invalid email format', password: '' });
+      errors.email = 'invalid email format';
       return;
     }
 
@@ -35,11 +64,22 @@ export const Auth: React.FC = () => {
       if (res.data.errors) {
         setErrors(res.data.errors);
       } else {
-        setErrors({ email: '', password: '' });
+        setErrors({ email: '', password: '', account: '' });
         setIsSent(true);
       }
       setIsSending(false);
     });
+  };
+
+  const Alert = (props: AlertProps) => {
+    return <MuiAlert elevation={6} variant="filled" {...props} />;
+  };
+
+  const handleClose = (event?: React.SyntheticEvent, reason?: string) => {
+    if (reason === 'clickaway') {
+      return;
+    }
+    setIsOpenErr(false);
   };
 
   return (
@@ -53,6 +93,17 @@ export const Auth: React.FC = () => {
           <Typography component="h1" variant="h5">
             {isLoggedIn ? 'Login' : 'Pre Register'}
           </Typography>
+          <Snackbar
+            open={isOpenErr}
+            autoHideDuration={5000}
+            onClose={handleClose}
+            key={'top' + 'center'}
+            anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+          >
+            <Alert onClose={handleClose} severity="error">
+              {errors.account}
+            </Alert>
+          </Snackbar>
           {isSent ? (
             <p className={classes.center}>Email was sent</p>
           ) : (
