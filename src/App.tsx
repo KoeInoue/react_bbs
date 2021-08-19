@@ -4,7 +4,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { selectUser, login, logout } from './features/userSlice';
 import { BrowserRouter, Route, Switch, Link, Redirect } from 'react-router-dom';
 import { TransitionGroup, CSSTransition } from 'react-transition-group';
-import { Feeds } from './components/Feeds';
+import { Home } from './components/Home';
 import { Auth } from './components/Auth';
 import { Register } from './components/Register';
 import { useCookies } from 'react-cookie';
@@ -20,7 +20,9 @@ const App: React.VFC = (props) => {
         <TransitionGroup>
           <CSSTransition classNames="fade" timeout={300}>
             <Switch>
-              <Route path="/home" component={Feeds}></Route>
+              <Route exact path="/home" render={(props) => <Home page={0} {...props} />}></Route>
+              <Route path="/post" render={(props) => <Home page={1} {...props} />}></Route>
+              <Route path="/profile" render={(props) => <Home page={2} {...props} />}></Route>
               <Route>
                 <Redirect to="/home" />
               </Route>

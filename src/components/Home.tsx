@@ -19,19 +19,23 @@ import Drawer from '@material-ui/core/Drawer';
 import { Timeline } from './Timeline';
 import { CreatePost } from './CreatePost';
 import { Profile } from './Profile';
-import { RouteComponentProps } from 'react-router-dom';
+import { useParams, RouteComponentProps } from 'react-router-dom';
 
 type Props = {
   match: RouteComponentProps['match'];
   location: RouteComponentProps['location'];
   history: RouteComponentProps['history'];
+  page: number;
 };
 
-export const Feeds: React.VFC<Props> = (props) => {
+export const Home: React.VFC<Props> = (props) => {
   const [value, setValue] = useState(0);
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const classes = useStyles();
   const [cookies, setCookie, removeCookie] = useCookies(['auth']);
+
+  useEffect(() => {
+    setValue(props.page);
+  }, [props.page]);
 
   const logingout = async () => {
     axios.get('/api/logout/').then((res) => {
@@ -40,20 +44,26 @@ export const Feeds: React.VFC<Props> = (props) => {
     });
   };
 
+  const Content = () => {
+    switch (value) {
+      case 0:
+        return <Timeline />;
+        break;
+      case 1:
+        return <CreatePost />;
+        break;
+
+      default:
+        return <Profile />;
+        break;
+    }
+  };
+
   return (
     <Grid container component="main" alignItems="center" justifyContent="center">
       <div className={classes.root}>
         <AppBar position="static">
           <Toolbar>
-            <IconButton
-              edge="start"
-              className={classes.menuButton}
-              color="inherit"
-              aria-label="menu"
-              onClick={() => setIsDrawerOpen(!isDrawerOpen)}
-            >
-              <MenuIcon />
-            </IconButton>
             <Typography variant="h6" className={classes.title}>
               BBS
             </Typography>
@@ -68,22 +78,26 @@ export const Feeds: React.VFC<Props> = (props) => {
           </Toolbar>
         </AppBar>
       </div>
-      <Drawer anchor={'left'} open={isDrawerOpen} onClose={() => setIsDrawerOpen(!isDrawerOpen)}>
-        <div className={classes.menu}>Nothing</div>
-      </Drawer>
       <Grid item xs={12} sm={12} md={12}>
-        {
-          {
-            0: <Timeline />,
-            1: <CreatePost />,
-            2: <Profile />,
-          }[value]
-        }
+        <Content />
       </Grid>
       <BottomNavigation
         value={value}
         onChange={(event, newValue) => {
-          setValue(newValue);
+          switch (newValue) {
+            case 0:
+              props.history.push('/home');
+              break;
+            case 1:
+              props.history.push('/post');
+              break;
+            case 2:
+              props.history.push('/profile');
+              break;
+
+            default:
+              break;
+          }
         }}
         showLabels
         className={classes.bottomMenu}
