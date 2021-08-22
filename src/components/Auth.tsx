@@ -1,5 +1,6 @@
 import React, { ReactEventHandler, useState, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
+import { login } from '../features/userSlice';
 import styles from './Auth.module.css';
 import validateEmail from '../common/validation';
 import axios from '../common/axios';
@@ -39,15 +40,23 @@ export const Auth: React.VFC<propTypes> = (props) => {
     setIsSending(true);
     axios.post('/api/login/', params).then((res) => {
       if (res.data.errors) {
+        console.log(res.data.errors);
+
         setErrors(res.data.errors);
         setIsSending(false);
         setIsOpenErr(true);
       } else {
         setErrors({ email: '', password: '', account: '' });
+        dispatch(
+          login({
+            id: res.data.user.Id,
+            name: res.data.user.Name,
+            token: res.data.token,
+          }),
+        );
+        setIsSending(false);
+        props.history.push('/home/');
       }
-      setIsSending(false);
-      setCookie('auth', res.data.token);
-      props.history.push('/home/');
     });
   };
 

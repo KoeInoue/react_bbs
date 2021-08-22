@@ -29,19 +29,16 @@ type Props = {
 };
 
 export const Home: React.VFC<Props> = (props) => {
+  const dispatch = useDispatch();
   const [value, setValue] = useState(0);
   const classes = useStyles();
-  const [cookies, setCookie, removeCookie] = useCookies(['auth']);
 
   useEffect(() => {
     setValue(props.page);
   }, [props.page]);
 
   const logingout = async () => {
-    axios.get('/api/logout/').then((res) => {
-      removeCookie('auth');
-      props.history.push('');
-    });
+    dispatch(logout());
   };
 
   const Content = () => {

@@ -2,15 +2,15 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { RootState } from '../app/store';
 
 interface User {
-  id: string;
+  id: number;
   name: string;
-  profileImgUrl: string;
+  token: string;
 }
 
 const user: User = {
-  id: '',
-  profileImgUrl: '',
+  id: 0,
   name: '',
+  token: '',
 };
 
 export const userSlice = createSlice({
@@ -26,14 +26,10 @@ export const userSlice = createSlice({
     logout: (state) => {
       state.user = user;
     },
-    updateUserProfile: (state, action: PayloadAction<User>) => {
-      state.user.name = action.payload.name;
-      state.user.profileImgUrl = action.payload.profileImgUrl;
-    },
   },
 });
 
-export const { login, logout, updateUserProfile } = userSlice.actions;
+export const { login, logout } = userSlice.actions;
 
 export const selectUser = (state: RootState): User => state.user.user;
 

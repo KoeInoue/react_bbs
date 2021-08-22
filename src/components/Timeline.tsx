@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { createStyles, Theme, makeStyles } from '@material-ui/core/styles';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
@@ -18,6 +18,7 @@ import { Emoji } from 'emoji-mart';
 import 'emoji-mart/css/emoji-mart.css';
 import Popover from '@material-ui/core/Popover';
 import EmojiEmotionsOutlinedIcon from '@material-ui/icons/EmojiEmotionsOutlined';
+import axios from '../common/axios';
 
 export const Timeline: React.VFC = () => {
   const [chosenEmoji, setChosenEmoji] = useState();
@@ -25,6 +26,10 @@ export const Timeline: React.VFC = () => {
   const [commentOpen, setCommentOpen] = React.useState(false);
   const [modalOpen, setModalOpen] = React.useState(false);
   const [anchorEl, setAnchorEl] = React.useState<HTMLButtonElement | null>(null);
+
+  useEffect(() => {
+    // axios.get('/api/');
+  }, []);
 
   const handleEmojiClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     setAnchorEl(event.currentTarget);

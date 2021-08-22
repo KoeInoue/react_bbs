@@ -10,26 +10,12 @@ import { Register } from './components/Register';
 import { useCookies } from 'react-cookie';
 
 const App: React.VFC = (props) => {
-  const [cookies, setCookie] = useCookies(['auth']);
   const user = useSelector(selectUser);
   const dispatch = useDispatch();
 
   return (
     <BrowserRouter>
-      {cookies.auth ? (
-        <TransitionGroup>
-          <CSSTransition classNames="fade" timeout={300}>
-            <Switch>
-              <Route exact path="/home" render={(props) => <Home page={0} {...props} />}></Route>
-              <Route path="/post" render={(props) => <Home page={1} {...props} />}></Route>
-              <Route path="/profile" render={(props) => <Home page={2} {...props} />}></Route>
-              <Route>
-                <Redirect to="/home" />
-              </Route>
-            </Switch>
-          </CSSTransition>
-        </TransitionGroup>
-      ) : (
+      {!user.token ? (
         <TransitionGroup>
           <CSSTransition classNames="fade" timeout={300}>
             <Switch>
@@ -43,6 +29,19 @@ const App: React.VFC = (props) => {
                   <h1>Not Found</h1>
                   <Link to="/">←Home</Link>
                 </div>
+              </Route>
+            </Switch>
+          </CSSTransition>
+        </TransitionGroup>
+      ) : (
+        <TransitionGroup>
+          <CSSTransition classNames="fade" timeout={300}>
+            <Switch>
+              <Route exact path="/home" render={(props) => <Home page={0} {...props} />}></Route>
+              <Route path="/post" render={(props) => <Home page={1} {...props} />}></Route>
+              <Route path="/profile" render={(props) => <Home page={2} {...props} />}></Route>
+              <Route>
+                <Redirect to="/home" />
               </Route>
             </Switch>
           </CSSTransition>

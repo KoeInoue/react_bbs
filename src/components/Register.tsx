@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
+import { login } from '../features/userSlice';
 import styles from './Auth.module.css';
 import axios from '../common/axios';
 import { Avatar, Button, CssBaseline, TextField, Paper, Grid, Typography, makeStyles } from '@material-ui/core';
@@ -19,6 +20,7 @@ type propTypes = {
 };
 
 export const Register: React.VFC<propTypes> = (props) => {
+  const dispatch = useDispatch();
   const classes = useStyles();
   const { token }: Param = useParams();
   const [name, setName] = useState('');
@@ -59,7 +61,13 @@ export const Register: React.VFC<propTypes> = (props) => {
         }
       } else {
         setErrors({ name: '', password: '', token: '' });
-        setCookie('auth', res.data.token);
+        dispatch(
+          login({
+            id: res.data.user.Id,
+            name: res.data.user.Name,
+            token: res.data.token,
+          }),
+        );
         props.history.push('/home/');
       }
     });
