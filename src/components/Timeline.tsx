@@ -19,6 +19,8 @@ import 'emoji-mart/css/emoji-mart.css';
 import Popover from '@material-ui/core/Popover';
 import EmojiEmotionsOutlinedIcon from '@material-ui/icons/EmojiEmotionsOutlined';
 import axios from '../common/axios';
+import { useSelector } from 'react-redux';
+import { selectUser } from '../features/userSlice';
 
 export const Timeline: React.VFC = () => {
   const [chosenEmoji, setChosenEmoji] = useState();
@@ -26,9 +28,20 @@ export const Timeline: React.VFC = () => {
   const [commentOpen, setCommentOpen] = React.useState(false);
   const [modalOpen, setModalOpen] = React.useState(false);
   const [anchorEl, setAnchorEl] = React.useState<HTMLButtonElement | null>(null);
+  const [posts, setPosts] = React.useState([]);
+  const user = useSelector(selectUser);
+
+  const config = {
+    headers: {
+      Token: user.token,
+      'User-Id': user.id,
+    },
+  };
 
   useEffect(() => {
-    // axios.get('/api/');
+    axios.get('/api/get-posts/', config).then((res) => {
+      console.log(res);
+    });
   }, []);
 
   const handleEmojiClick = (event: React.MouseEvent<HTMLButtonElement>) => {

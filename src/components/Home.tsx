@@ -47,7 +47,7 @@ export const Home: React.VFC<Props> = (props) => {
         return <Timeline />;
         break;
       case 1:
-        return <CreatePost />;
+        return <CreatePost props={props} />;
         break;
 
       default:
