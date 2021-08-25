@@ -27,7 +27,6 @@ export const Auth: React.VFC<propTypes> = (props) => {
   const [isSent, setIsSent] = useState(false);
   const [errors, setErrors] = useState({ email: '', password: '', account: '' });
   const [isOpenErr, setIsOpenErr] = useState(false);
-  const [cookies, setCookie] = useCookies(['auth']);
 
   const signIn = async () => {
     if (!validateEmail(email)) {
@@ -46,14 +45,19 @@ export const Auth: React.VFC<propTypes> = (props) => {
         setIsSending(false);
         setIsOpenErr(true);
       } else {
+        console.log(res.data);
+
         setErrors({ email: '', password: '', account: '' });
         dispatch(
           login({
-            id: res.data.user.Id,
+            id: res.data.user.ID,
             name: res.data.user.Name,
             token: res.data.token,
           }),
         );
+        localStorage.setItem('id', String(res.data.user.ID));
+        localStorage.setItem('name', res.data.user.Name);
+        localStorage.setItem('token', res.data.token);
         setIsSending(false);
         props.history.push('/home/');
       }

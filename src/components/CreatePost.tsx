@@ -34,7 +34,7 @@ export const CreatePost: React.FC<Props> = ({ props }) => {
         'api/create-post/',
         {
           content,
-          userId: user.id,
+          userId: Number(user.id),
         },
         config,
       )

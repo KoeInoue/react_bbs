@@ -63,11 +63,14 @@ export const Register: React.VFC<propTypes> = (props) => {
         setErrors({ name: '', password: '', token: '' });
         dispatch(
           login({
-            id: res.data.user.Id,
+            id: res.data.user.ID,
             name: res.data.user.Name,
             token: res.data.token,
           }),
         );
+        localStorage.setItem('id', String(res.data.user.ID));
+        localStorage.setItem('name', res.data.user.Name);
+        localStorage.setItem('token', res.data.token);
         props.history.push('/home/');
       }
     });

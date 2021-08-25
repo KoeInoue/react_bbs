@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { logout } from '../features/userSlice';
 import { useSelector, useDispatch } from 'react-redux';
 import axios from '../common/axios';
-import { useCookies } from 'react-cookie';
 import { makeStyles } from '@material-ui/core/styles';
 import { Avatar, CssBaseline, TextField, Paper, Grid, BottomNavigation, Container } from '@material-ui/core';
 import BottomNavigationAction from '@material-ui/core/BottomNavigationAction';
@@ -13,9 +12,6 @@ import AppBar from '@material-ui/core/AppBar';
 import Toolbar from '@material-ui/core/Toolbar';
 import Typography from '@material-ui/core/Typography';
 import Button from '@material-ui/core/Button';
-import IconButton from '@material-ui/core/IconButton';
-import MenuIcon from '@material-ui/icons/Menu';
-import Drawer from '@material-ui/core/Drawer';
 import { Timeline } from './Timeline';
 import { CreatePost } from './CreatePost';
 import { Profile } from './Profile';
@@ -38,6 +34,7 @@ export const Home: React.VFC<Props> = (props) => {
   }, [props.page]);
 
   const logingout = async () => {
+    localStorage.clear();
     dispatch(logout());
   };
 

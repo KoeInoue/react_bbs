@@ -12,10 +12,19 @@ import { useCookies } from 'react-cookie';
 const App: React.VFC = (props) => {
   const user = useSelector(selectUser);
   const dispatch = useDispatch();
+  useEffect(() => {
+    dispatch(
+      login({
+        id: localStorage.getItem('id'),
+        name: localStorage.getItem('name'),
+        token: localStorage.getItem('token'),
+      }),
+    );
+  }, [dispatch]);
 
   return (
     <BrowserRouter>
-      {!user.token ? (
+      {!user.token && localStorage.getItem('token') == null ? (
         <TransitionGroup>
           <CSSTransition classNames="fade" timeout={300}>
             <Switch>

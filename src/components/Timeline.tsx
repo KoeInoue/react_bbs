@@ -31,18 +31,22 @@ export const Timeline: React.VFC = () => {
   const [posts, setPosts] = React.useState([]);
   const user = useSelector(selectUser);
 
-  const config = {
-    headers: {
-      Token: user.token,
-      'User-Id': user.id,
-    },
-  };
-
   useEffect(() => {
-    axios.get('/api/get-posts/', config).then((res) => {
-      console.log(res);
-    });
-  }, []);
+    const config = {
+      headers: {
+        Token: user.token,
+        'User-Id': user.id,
+      },
+    };
+    const getPosts = () => {
+      axios.get('/api/get-posts/', config).then((res) => {
+        console.log(res);
+      });
+    };
+    if (user.token) {
+      getPosts();
+    }
+  }, [user]);
 
   const handleEmojiClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     setAnchorEl(event.currentTarget);
