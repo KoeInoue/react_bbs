@@ -45,8 +45,6 @@ export const Auth: React.VFC<propTypes> = (props) => {
         setIsSending(false);
         setIsOpenErr(true);
       } else {
-        console.log(res.data);
-
         setErrors({ email: '', password: '', account: '' });
         dispatch(
           login({

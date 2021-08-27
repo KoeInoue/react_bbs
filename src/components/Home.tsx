@@ -56,7 +56,7 @@ export const Home: React.VFC<Props> = (props) => {
   return (
     <Grid container component="main" alignItems="center" justifyContent="center">
       <div className={classes.root}>
-        <AppBar position="static">
+        <AppBar position="fixed">
           <Toolbar>
             <Typography variant="h6" className={classes.title}>
               BBS
@@ -72,7 +72,7 @@ export const Home: React.VFC<Props> = (props) => {
           </Toolbar>
         </AppBar>
       </div>
-      <Grid item xs={12} sm={12} md={12}>
+      <Grid item xs={12} sm={12} md={12} className={classes.contentWrap}>
         <Content />
       </Grid>
       <BottomNavigation
@@ -116,11 +116,14 @@ const useStyles = makeStyles((theme) => ({
   },
   bottomMenu: {
     width: '100%',
-    position: 'absolute',
+    position: 'fixed',
     bottom: 0,
     background: '#f0f0f0',
   },
   menu: {
     width: 200,
+  },
+  contentWrap: {
+    marginTop: '56px',
   },
 }));

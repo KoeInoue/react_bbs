@@ -21,6 +21,7 @@ import EmojiEmotionsOutlinedIcon from '@material-ui/icons/EmojiEmotionsOutlined'
 import axios from '../common/axios';
 import { useSelector } from 'react-redux';
 import { selectUser } from '../features/userSlice';
+import { Post, User } from '../model/Models';
 
 export const Timeline: React.VFC = () => {
   const [chosenEmoji, setChosenEmoji] = useState();
@@ -28,7 +29,7 @@ export const Timeline: React.VFC = () => {
   const [commentOpen, setCommentOpen] = React.useState(false);
   const [modalOpen, setModalOpen] = React.useState(false);
   const [anchorEl, setAnchorEl] = React.useState<HTMLButtonElement | null>(null);
-  const [posts, setPosts] = React.useState([]);
+  const [posts, setPosts] = useState<Post[] | []>([]);
   const user = useSelector(selectUser);
 
   useEffect(() => {
@@ -40,13 +41,23 @@ export const Timeline: React.VFC = () => {
     };
     const getPosts = () => {
       axios.get('/api/get-posts/', config).then((res) => {
-        console.log(res);
+        setPosts(res.data.posts);
       });
     };
     if (user.token) {
       getPosts();
     }
   }, [user]);
+
+  const handleCommentClick = (id: number) => {
+    const p: Post[] = posts.map((post: Post): Post => {
+      if (post.ID == id) {
+        post.OpenComment = !post.OpenComment;
+      }
+      return post;
+    });
+    setPosts(p);
+  };
 
   const handleEmojiClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     setAnchorEl(event.currentTarget);
@@ -60,105 +71,114 @@ export const Timeline: React.VFC = () => {
   const openEmoji = Boolean(anchorEl);
   const emojiId = openEmoji ? 'simple-popover' : undefined;
 
-  const handleCommentClick = () => {
-    setCommentOpen(!commentOpen);
-  };
-
   return (
     <Grid container component="main" className={classes.root}>
       <div className={classes.title}>Timeline</div>
       <List className={classes.root}>
-        <ListItem alignItems="flex-start" button>
-          <ListItemAvatar>
-            <Avatar alt="" src="" />
-          </ListItemAvatar>
-          <ListItemText
-            disableTypography={false}
-            className={classes.text}
-            primary="Brunch this weekend?"
-            secondary={<span className={classes.text}>I will be in your neighborhood doing errands this…</span>}
-          />
-          <ListItemSecondaryAction>
-            <IconButton edge="end" aria-label="comments" onClick={handleEmojiClick}>
-              <EmojiEmotionsOutlinedIcon />
-            </IconButton>
-            <IconButton onClick={handleCommentClick}>
-              {commentOpen ? <TextsmsTwoToneIcon /> : <ChatBubbleOutlineTwoToneIcon />}
-            </IconButton>
-          </ListItemSecondaryAction>
-        </ListItem>
-        <ListItem>
-          <ListItemAvatar>
-            <Avatar alt="Remy Sharp" src="/dummy.png" />
-          </ListItemAvatar>
-          <Emoji emoji="thinking_face" size={20} onClick={(emoji) => alert(JSON.stringify(emoji))} />
-        </ListItem>
-
-        {/* Comments area */}
-        <Collapse in={commentOpen} timeout="auto" unmountOnExit>
-          <div className={classes.nested}>
-            <TextField
-              className={classes.commentArea}
-              id="outlined-multiline-static"
-              label="Write comment"
-              multiline
-              rows={2}
-              defaultValue=""
-              variant="outlined"
-            />
-            <List component="div" disablePadding>
-              <ListItem button>
-                <ListItemIcon></ListItemIcon>
-                <ListItemText secondary="Comments" />
+        {posts.map((post: Post) => {
+          return (
+            <div key={post.ID}>
+              <ListItem alignItems="flex-start" button key={post.ID}>
+                <ListItemAvatar>
+                  <Avatar alt="" src="" />
+                </ListItemAvatar>
+                <ListItemText
+                  disableTypography={false}
+                  className={classes.text}
+                  primary={post.User.Name}
+                  secondary={
+                    <span className={classes.text}>
+                      {post.Content.split('\n').map((str, index) => (
+                        <React.Fragment key={index}>
+                          {str}
+                          <br />
+                        </React.Fragment>
+                      ))}
+                    </span>
+                  }
+                />
                 <ListItemSecondaryAction>
                   <IconButton edge="end" aria-label="comments" onClick={handleEmojiClick}>
                     <EmojiEmotionsOutlinedIcon />
                   </IconButton>
+                  <IconButton onClick={() => handleCommentClick(post.ID)}>
+                    {post.OpenComment ? <TextsmsTwoToneIcon /> : <ChatBubbleOutlineTwoToneIcon />}
+                  </IconButton>
                 </ListItemSecondaryAction>
               </ListItem>
-            </List>
-          </div>
-        </Collapse>
-        <Divider variant="inset" component="li" />
+              <ListItem>
+                <ListItemAvatar>
+                  <Avatar alt="Remy Sharp" src="/dummy.png" />
+                </ListItemAvatar>
+                <Emoji emoji="thinking_face" size={20} onClick={(emoji) => alert(JSON.stringify(emoji))} />
+              </ListItem>
+              <Collapse in={post.OpenComment} timeout="auto" unmountOnExit>
+                <div className={classes.nested}>
+                  <TextField
+                    className={classes.commentArea}
+                    id="outlined-multiline-static"
+                    label="Write comment"
+                    multiline
+                    rows={2}
+                    defaultValue=""
+                    variant="outlined"
+                  />
+                  <List component="div" disablePadding>
+                    <ListItem button>
+                      <ListItemIcon></ListItemIcon>
+                      <ListItemText secondary="Comments" />
+                      <ListItemSecondaryAction>
+                        <IconButton edge="end" aria-label="comments" onClick={handleEmojiClick}>
+                          <EmojiEmotionsOutlinedIcon />
+                        </IconButton>
+                      </ListItemSecondaryAction>
+                    </ListItem>
+                  </List>
+                </div>
+              </Collapse>
+              <Divider variant="inset" component="li" />
+              <Popover
+                id={emojiId}
+                open={openEmoji}
+                anchorEl={anchorEl}
+                onClose={handleEmojiClose}
+                anchorOrigin={{
+                  vertical: 'bottom',
+                  horizontal: 'center',
+                }}
+                transformOrigin={{
+                  vertical: 'top',
+                  horizontal: 'center',
+                }}
+              >
+                <div className={classes.emojisContainer}>
+                  <div className={classes.emojis}>
+                    <Emoji emoji="smile" size={20} onClick={(emoji) => onEmojiClick(emoji)} />
+                  </div>
+                  <div className={classes.emojis}>
+                    <Emoji emoji="sweat_smile" size={20} onClick={(emoji) => onEmojiClick(emoji)} />
+                  </div>
+                  <div className={classes.emojis}>
+                    <Emoji emoji="rolling_on_the_floor_laughing" size={20} onClick={(emoji) => onEmojiClick(emoji)} />
+                  </div>
+                  <div className={classes.emojis}>
+                    <Emoji emoji="cry" size={20} onClick={(emoji) => onEmojiClick(emoji)} />
+                  </div>
+                  <div className={classes.emojis}>
+                    <Emoji emoji="rage" size={20} onClick={(emoji) => onEmojiClick(emoji)} />
+                  </div>
+                  <div className={classes.emojis}>
+                    <Emoji emoji="thumbsup" size={20} onClick={(emoji) => onEmojiClick(emoji)} />
+                  </div>
+                  <div className={classes.emojis}>
+                    <Emoji emoji="heart" size={20} onClick={(emoji) => onEmojiClick(emoji)} />
+                  </div>
+                </div>
+              </Popover>
+            </div>
+          );
+        })}
       </List>
-      <Popover
-        id={emojiId}
-        open={openEmoji}
-        anchorEl={anchorEl}
-        onClose={handleEmojiClose}
-        anchorOrigin={{
-          vertical: 'bottom',
-          horizontal: 'center',
-        }}
-        transformOrigin={{
-          vertical: 'top',
-          horizontal: 'center',
-        }}
-      >
-        <div className={classes.emojisContainer}>
-          <div className={classes.emojis}>
-            <Emoji emoji="smile" size={20} onClick={(emoji) => onEmojiClick(emoji)} />
-          </div>
-          <div className={classes.emojis}>
-            <Emoji emoji="sweat_smile" size={20} onClick={(emoji) => onEmojiClick(emoji)} />
-          </div>
-          <div className={classes.emojis}>
-            <Emoji emoji="rolling_on_the_floor_laughing" size={20} onClick={(emoji) => onEmojiClick(emoji)} />
-          </div>
-          <div className={classes.emojis}>
-            <Emoji emoji="cry" size={20} onClick={(emoji) => onEmojiClick(emoji)} />
-          </div>
-          <div className={classes.emojis}>
-            <Emoji emoji="rage" size={20} onClick={(emoji) => onEmojiClick(emoji)} />
-          </div>
-          <div className={classes.emojis}>
-            <Emoji emoji="thumbsup" size={20} onClick={(emoji) => onEmojiClick(emoji)} />
-          </div>
-          <div className={classes.emojis}>
-            <Emoji emoji="heart" size={20} onClick={(emoji) => onEmojiClick(emoji)} />
-          </div>
-        </div>
-      </Popover>
     </Grid>
   );
 };
