@@ -1,4 +1,5 @@
 import { User } from './User';
+import { Comment } from './Comment';
 
 type Post = {
   ID: number;
@@ -9,7 +10,7 @@ type Post = {
   UserID: number;
   User: User;
   OpenComment: boolean;
-  // Comments: Comment[];
+  Comments: Comment[];
   // PostReactions: PostReaction[];
 };
 

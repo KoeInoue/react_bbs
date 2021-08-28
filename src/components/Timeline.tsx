@@ -7,13 +7,11 @@ import ListItemText from '@material-ui/core/ListItemText';
 import ListItemAvatar from '@material-ui/core/ListItemAvatar';
 import ListItemSecondaryAction from '@material-ui/core/ListItemSecondaryAction';
 import Avatar from '@material-ui/core/Avatar';
-import { Grid } from '@material-ui/core';
+import { Grid, Button, Icon, Badge } from '@material-ui/core';
 import IconButton from '@material-ui/core/IconButton';
 import Collapse from '@material-ui/core/Collapse';
-import ListItemIcon from '@material-ui/core/ListItemIcon';
 import TextsmsTwoToneIcon from '@material-ui/icons/TextsmsTwoTone';
 import ChatBubbleOutlineTwoToneIcon from '@material-ui/icons/ChatBubbleOutlineTwoTone';
-import TextField from '@material-ui/core/TextField';
 import { Emoji } from 'emoji-mart';
 import 'emoji-mart/css/emoji-mart.css';
 import Popover from '@material-ui/core/Popover';
@@ -21,16 +19,24 @@ import EmojiEmotionsOutlinedIcon from '@material-ui/icons/EmojiEmotionsOutlined'
 import axios from '../common/axios';
 import { useSelector } from 'react-redux';
 import { selectUser } from '../features/userSlice';
-import { Post, User } from '../model/Models';
+import { Post, User, Comment } from '../model/Models';
+import Swal from 'sweetalert2';
+import ExpandLessIcon from '@material-ui/icons/ExpandLess';
 
 export const Timeline: React.VFC = () => {
   const [chosenEmoji, setChosenEmoji] = useState();
   const classes = useStyles();
-  const [commentOpen, setCommentOpen] = React.useState(false);
   const [modalOpen, setModalOpen] = React.useState(false);
   const [anchorEl, setAnchorEl] = React.useState<HTMLButtonElement | null>(null);
   const [posts, setPosts] = useState<Post[] | []>([]);
   const user = useSelector(selectUser);
+
+  const config = {
+    headers: {
+      Token: user.token,
+      'User-Id': user.id,
+    },
+  };
 
   useEffect(() => {
     const config = {
@@ -49,14 +55,64 @@ export const Timeline: React.VFC = () => {
     }
   }, [user]);
 
-  const handleCommentClick = (id: number) => {
+  const handleCommentToggle = (id: number) => {
     const p: Post[] = posts.map((post: Post): Post => {
       if (post.ID == id) {
         post.OpenComment = !post.OpenComment;
+      } else {
+        post.OpenComment = false;
       }
       return post;
     });
     setPosts(p);
+  };
+
+  const handleCommentPopup = async (postId: number) => {
+    const { value: text } = await Swal.fire({
+      input: 'textarea',
+      inputLabel: 'Reply',
+      inputPlaceholder: 'Type your message here...',
+      inputAttributes: {
+        'aria-label': 'Type your message here',
+      },
+      confirmButtonText: 'Send',
+    });
+
+    if (text) {
+      sendComment(text, postId);
+    }
+  };
+
+  const sendComment = (content: string, postId: number) => {
+    axios
+      .post(
+        'api/create-comment/',
+        {
+          content,
+          userId: Number(user.id),
+          postId,
+        },
+        config,
+      )
+      .then((res) => {
+        const comment: Comment = res.data.comment;
+        const p: Post[] = posts.map((post: Post): Post => {
+          if (post.ID == postId) {
+            post.Comments.unshift(comment);
+          }
+          return post;
+        });
+        setPosts(p);
+
+        Swal.fire({
+          position: 'bottom-end',
+          icon: 'success',
+          title: 'Your reply was sent',
+          showConfirmButton: false,
+          toast: true,
+          timer: 1500,
+        });
+      });
   };
 
   const handleEmojiClick = (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -78,7 +134,7 @@ export const Timeline: React.VFC = () => {
         {posts.map((post: Post) => {
           return (
             <div key={post.ID}>
-              <ListItem alignItems="flex-start" button key={post.ID}>
+              <ListItem alignItems="flex-start" key={post.ID} className={classes.contentList}>
                 <ListItemAvatar>
                   <Avatar alt="" src="" />
                 </ListItemAvatar>
@@ -101,12 +157,14 @@ export const Timeline: React.VFC = () => {
                   <IconButton edge="end" aria-label="comments" onClick={handleEmojiClick}>
                     <EmojiEmotionsOutlinedIcon />
                   </IconButton>
-                  <IconButton onClick={() => handleCommentClick(post.ID)}>
-                    {post.OpenComment ? <TextsmsTwoToneIcon /> : <ChatBubbleOutlineTwoToneIcon />}
+                  <IconButton onClick={() => handleCommentToggle(post.ID)}>
+                    <Badge badgeContent={post.Comments.length} color="primary">
+                      {post.OpenComment ? <TextsmsTwoToneIcon /> : <ChatBubbleOutlineTwoToneIcon />}
+                    </Badge>
                   </IconButton>
                 </ListItemSecondaryAction>
               </ListItem>
-              <ListItem>
+              <ListItem className={classes.emojiList}>
                 <ListItemAvatar>
                   <Avatar alt="Remy Sharp" src="/dummy.png" />
                 </ListItemAvatar>
@@ -114,25 +172,40 @@ export const Timeline: React.VFC = () => {
               </ListItem>
               <Collapse in={post.OpenComment} timeout="auto" unmountOnExit>
                 <div className={classes.nested}>
-                  <TextField
-                    className={classes.commentArea}
-                    id="outlined-multiline-static"
-                    label="Write comment"
-                    multiline
-                    rows={2}
-                    defaultValue=""
+                  <Button
                     variant="outlined"
-                  />
-                  <List component="div" disablePadding>
-                    <ListItem button>
-                      <ListItemIcon></ListItemIcon>
-                      <ListItemText secondary="Comments" />
-                      <ListItemSecondaryAction>
-                        <IconButton edge="end" aria-label="comments" onClick={handleEmojiClick}>
-                          <EmojiEmotionsOutlinedIcon />
-                        </IconButton>
-                      </ListItemSecondaryAction>
-                    </ListItem>
+                    color="primary"
+                    className={classes.sendButton}
+                    onClick={() => handleCommentPopup(post.ID)}
+                  >
+                    Reply
+                  </Button>
+                  <List component="div">
+                    {post.Comments.map((comment) => {
+                      return (
+                        <ListItem key={comment.ID} className={classes.commentList}>
+                          <Avatar className={classes.smallAvatar} />
+                          <ListItemText
+                            disableTypography={false}
+                            className={classes.text}
+                            primary={comment.User.Name}
+                            secondary={
+                              <span className={classes.text}>
+                                {comment.Content.split('\n').map((str, index) => (
+                                  <React.Fragment key={index}>
+                                    {str}
+                                    <br />
+                                  </React.Fragment>
+                                ))}
+                              </span>
+                            }
+                          />
+                        </ListItem>
+                      );
+                    })}
+                    <IconButton onClick={() => handleCommentToggle(post.ID)}>
+                      <ExpandLessIcon />
+                    </IconButton>
                   </List>
                 </div>
               </Collapse>
@@ -206,8 +279,8 @@ const useStyles = makeStyles((theme: Theme) =>
       paddingLeft: theme.spacing(4),
     },
     commentArea: {
-      marginLeft: '40px',
-      width: '85%',
+      marginLeft: theme.spacing(5),
+      width: theme.spacing(20),
     },
     modal: {
       display: 'flex',
@@ -226,6 +299,24 @@ const useStyles = makeStyles((theme: Theme) =>
     },
     emojisContainer: {
       padding: '5px',
+    },
+    smallAvatar: {
+      width: theme.spacing(3),
+      height: theme.spacing(3),
+      marginRight: '5px',
+    },
+    emojiList: {
+      paddingTop: '0px',
+      paddingBottom: '0px',
+    },
+    contentList: {
+      paddingBottom: '0px',
+    },
+    sendButton: {
+      marginLeft: theme.spacing(5),
+    },
+    commentList: {
+      paddingLeft: theme.spacing(5),
     },
   }),
 );

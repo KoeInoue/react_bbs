@@ -7,6 +7,7 @@ import axios from '../common/axios';
 import { selectUser } from '../features/userSlice';
 import { useSelector } from 'react-redux';
 import { useParams, RouteComponentProps } from 'react-router-dom';
+import Swal from 'sweetalert2';
 
 type Props = {
   props: {
@@ -39,6 +40,14 @@ export const CreatePost: React.FC<Props> = ({ props }) => {
         config,
       )
       .then((res) => {
+        Swal.fire({
+          position: 'bottom-end',
+          icon: 'success',
+          title: 'Your post was sent',
+          showConfirmButton: false,
+          toast: true,
+          timer: 1500,
+        });
         props.history.push('/home/');
       });
   };

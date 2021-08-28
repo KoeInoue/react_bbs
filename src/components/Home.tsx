@@ -125,5 +125,6 @@ const useStyles = makeStyles((theme) => ({
   },
   contentWrap: {
     marginTop: '56px',
+    marginBottom: '56px',
   },
 }));
