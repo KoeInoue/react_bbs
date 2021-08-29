@@ -7,9 +7,8 @@ import ListItemText from '@material-ui/core/ListItemText';
 import ListItemAvatar from '@material-ui/core/ListItemAvatar';
 import ListItemSecondaryAction from '@material-ui/core/ListItemSecondaryAction';
 import Avatar from '@material-ui/core/Avatar';
-import { Grid, Button, Icon, Badge } from '@material-ui/core';
+import { Grid, Button, Icon, Badge, Chip } from '@material-ui/core';
 import IconButton from '@material-ui/core/IconButton';
-import Collapse from '@material-ui/core/Collapse';
 import TextsmsTwoToneIcon from '@material-ui/icons/TextsmsTwoTone';
 import ChatBubbleOutlineTwoToneIcon from '@material-ui/icons/ChatBubbleOutlineTwoTone';
 import { Emoji } from 'emoji-mart';
@@ -19,17 +18,14 @@ import EmojiEmotionsOutlinedIcon from '@material-ui/icons/EmojiEmotionsOutlined'
 import axios from '../common/axios';
 import { useSelector } from 'react-redux';
 import { selectUser } from '../features/userSlice';
-import { Post, User, Comment } from '../model/Models';
-import Swal from 'sweetalert2';
-import ExpandLessIcon from '@material-ui/icons/ExpandLess';
+import { Post, PostReaction } from '../model/Models';
+import { TimelineComment } from './TimelineComment';
 
 export const Timeline: React.VFC = () => {
-  const [chosenEmoji, setChosenEmoji] = useState();
   const classes = useStyles();
-  const [modalOpen, setModalOpen] = React.useState(false);
-  const [anchorEl, setAnchorEl] = React.useState<HTMLButtonElement | null>(null);
   const [posts, setPosts] = useState<Post[] | []>([]);
   const user = useSelector(selectUser);
+  const emojis = ['smile', 'sweat_smile', 'rolling_on_the_floor_laughing', 'cry', 'rage', 'thumbsup', 'heart'];
 
   const config = {
     headers: {
@@ -67,65 +63,51 @@ export const Timeline: React.VFC = () => {
     setPosts(p);
   };
 
-  const handleCommentPopup = async (postId: number) => {
-    const { value: text } = await Swal.fire({
-      input: 'textarea',
-      inputLabel: 'Reply',
-      inputPlaceholder: 'Type your message here...',
-      inputAttributes: {
-        'aria-label': 'Type your message here',
-      },
-      confirmButtonText: 'Send',
+  const emojiId = 'simple-popover';
+
+  const handleEmojiClick = (event: React.MouseEvent<HTMLButtonElement>, postId: number) => {
+    const p: Post[] = posts.map((post: Post): Post => {
+      if (post.ID == postId) {
+        post.AnchorEl = event.currentTarget;
+      }
+      return post;
     });
-
-    if (text) {
-      sendComment(text, postId);
-    }
+    setPosts(p);
   };
-
-  const sendComment = (content: string, postId: number) => {
+  const handleEmojiClose = (postId: number) => {
+    const p: Post[] = posts.map((post: Post): Post => {
+      if (post.ID == postId) {
+        post.AnchorEl = null;
+      }
+      return post;
+    });
+    setPosts(p);
+  };
+  const onEmojiClick = (emojiCode: string | undefined, postId: number) => {
+    if (emojiId === undefined) {
+      return;
+    }
     axios
       .post(
-        'api/create-comment/',
+        'api/create-reaction/',
         {
-          content,
+          emojiCode,
           userId: Number(user.id),
           postId,
         },
         config,
       )
       .then((res) => {
-        const comment: Comment = res.data.comment;
+        const reaction: PostReaction = res.data.reaction;
         const p: Post[] = posts.map((post: Post): Post => {
           if (post.ID == postId) {
-            post.Comments.unshift(comment);
+            post.PostReactions.unshift(reaction);
           }
           return post;
         });
         setPosts(p);
-
-        Swal.fire({
-          position: 'bottom-end',
-          icon: 'success',
-          title: 'Your reply was sent',
-          showConfirmButton: false,
-          toast: true,
-          timer: 1500,
-        });
       });
   };
-
-  const handleEmojiClick = (event: React.MouseEvent<HTMLButtonElement>) => {
-    setAnchorEl(event.currentTarget);
-  };
-  const handleEmojiClose = () => {
-    setAnchorEl(null);
-  };
-  const onEmojiClick = (emojiObject: any) => {
-    setChosenEmoji(emojiObject);
-  };
-  const openEmoji = Boolean(anchorEl);
-  const emojiId = openEmoji ? 'simple-popover' : undefined;
 
   return (
     <Grid container component="main" className={classes.root}>
@@ -154,7 +136,7 @@ export const Timeline: React.VFC = () => {
                   }
                 />
                 <ListItemSecondaryAction>
-                  <IconButton edge="end" aria-label="comments" onClick={handleEmojiClick}>
+                  <IconButton edge="end" aria-label="comments" onClick={(e) => handleEmojiClick(e, post.ID)}>
                     <EmojiEmotionsOutlinedIcon />
                   </IconButton>
                   <IconButton onClick={() => handleCommentToggle(post.ID)}>
@@ -168,53 +150,33 @@ export const Timeline: React.VFC = () => {
                 <ListItemAvatar>
                   <Avatar alt="Remy Sharp" src="/dummy.png" />
                 </ListItemAvatar>
-                <Emoji emoji="thinking_face" size={20} onClick={(emoji) => alert(JSON.stringify(emoji))} />
-              </ListItem>
-              <Collapse in={post.OpenComment} timeout="auto" unmountOnExit>
-                <div className={classes.nested}>
-                  <Button
-                    variant="outlined"
-                    color="primary"
-                    className={classes.sendButton}
-                    onClick={() => handleCommentPopup(post.ID)}
-                  >
-                    Reply
-                  </Button>
-                  <List component="div">
-                    {post.Comments.map((comment) => {
-                      return (
-                        <ListItem key={comment.ID} className={classes.commentList}>
-                          <Avatar className={classes.smallAvatar} />
-                          <ListItemText
-                            disableTypography={false}
-                            className={classes.text}
-                            primary={comment.User.Name}
-                            secondary={
-                              <span className={classes.text}>
-                                {comment.Content.split('\n').map((str, index) => (
-                                  <React.Fragment key={index}>
-                                    {str}
-                                    <br />
-                                  </React.Fragment>
-                                ))}
-                              </span>
-                            }
+                {post.PostReactions.map((reaction) => {
+                  return (
+                    <div key={reaction.ID}>
+                      <Chip
+                        variant="outlined"
+                        className={classes.emojiReaction}
+                        avatar={
+                          <Emoji
+                            emoji={reaction.EmojiCode}
+                            size={20}
+                            onClick={(emoji) => alert(JSON.stringify(emoji))}
                           />
-                        </ListItem>
-                      );
-                    })}
-                    <IconButton onClick={() => handleCommentToggle(post.ID)}>
-                      <ExpandLessIcon />
-                    </IconButton>
-                  </List>
-                </div>
-              </Collapse>
+                        }
+                        label={post.PostReactions.length}
+                        // onClick={handleClick}
+                      />
+                    </div>
+                  );
+                })}
+              </ListItem>
+              <TimelineComment post={post} setPosts={setPosts} posts={posts} />
               <Divider variant="inset" component="li" />
               <Popover
-                id={emojiId}
-                open={openEmoji}
-                anchorEl={anchorEl}
-                onClose={handleEmojiClose}
+                id={String(post.ID)}
+                open={Boolean(post.AnchorEl)}
+                anchorEl={post.AnchorEl}
+                onClose={() => handleEmojiClose(post.ID)}
                 anchorOrigin={{
                   vertical: 'bottom',
                   horizontal: 'center',
@@ -225,27 +187,13 @@ export const Timeline: React.VFC = () => {
                 }}
               >
                 <div className={classes.emojisContainer}>
-                  <div className={classes.emojis}>
-                    <Emoji emoji="smile" size={20} onClick={(emoji) => onEmojiClick(emoji)} />
-                  </div>
-                  <div className={classes.emojis}>
-                    <Emoji emoji="sweat_smile" size={20} onClick={(emoji) => onEmojiClick(emoji)} />
-                  </div>
-                  <div className={classes.emojis}>
-                    <Emoji emoji="rolling_on_the_floor_laughing" size={20} onClick={(emoji) => onEmojiClick(emoji)} />
-                  </div>
-                  <div className={classes.emojis}>
-                    <Emoji emoji="cry" size={20} onClick={(emoji) => onEmojiClick(emoji)} />
-                  </div>
-                  <div className={classes.emojis}>
-                    <Emoji emoji="rage" size={20} onClick={(emoji) => onEmojiClick(emoji)} />
-                  </div>
-                  <div className={classes.emojis}>
-                    <Emoji emoji="thumbsup" size={20} onClick={(emoji) => onEmojiClick(emoji)} />
-                  </div>
-                  <div className={classes.emojis}>
-                    <Emoji emoji="heart" size={20} onClick={(emoji) => onEmojiClick(emoji)} />
-                  </div>
+                  {emojis.map((e) => {
+                    return (
+                      <div className={classes.emojis} key={e}>
+                        <Emoji emoji={e} size={20} onClick={(emoji) => onEmojiClick(emoji.id, post.ID)} />
+                      </div>
+                    );
+                  })}
                 </div>
               </Popover>
             </div>
@@ -275,18 +223,6 @@ const useStyles = makeStyles((theme: Theme) =>
       fontSize: '16px',
       fontWeight: 'bold',
     },
-    nested: {
-      paddingLeft: theme.spacing(4),
-    },
-    commentArea: {
-      marginLeft: theme.spacing(5),
-      width: theme.spacing(20),
-    },
-    modal: {
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
     paper: {
       backgroundColor: theme.palette.background.paper,
       border: '2px solid #000',
@@ -300,11 +236,6 @@ const useStyles = makeStyles((theme: Theme) =>
     emojisContainer: {
       padding: '5px',
     },
-    smallAvatar: {
-      width: theme.spacing(3),
-      height: theme.spacing(3),
-      marginRight: '5px',
-    },
     emojiList: {
       paddingTop: '0px',
       paddingBottom: '0px',
@@ -312,11 +243,8 @@ const useStyles = makeStyles((theme: Theme) =>
     contentList: {
       paddingBottom: '0px',
     },
-    sendButton: {
-      marginLeft: theme.spacing(5),
-    },
-    commentList: {
-      paddingLeft: theme.spacing(5),
+    emojiReaction: {
+      paddingLeft: theme.spacing(1),
     },
   }),
 );

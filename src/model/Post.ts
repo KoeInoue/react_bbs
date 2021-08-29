@@ -1,5 +1,6 @@
 import { User } from './User';
 import { Comment } from './Comment';
+import { PostReaction } from './PostReaction';
 
 type Post = {
   ID: number;
@@ -10,8 +11,9 @@ type Post = {
   UserID: number;
   User: User;
   OpenComment: boolean;
+  AnchorEl: HTMLButtonElement | null;
   Comments: Comment[];
-  // PostReactions: PostReaction[];
+  PostReactions: PostReaction[];
 };
 
 export type { Post };
