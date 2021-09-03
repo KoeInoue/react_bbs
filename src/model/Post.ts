@@ -11,9 +11,10 @@ type Post = {
   UserID: number;
   User: User;
   OpenComment: boolean;
-  AnchorEl: HTMLButtonElement | null;
+  AnchorEl: HTMLDivElement | HTMLButtonElement | null;
   Comments: Comment[];
   PostReactions: PostReaction[];
+  Emojis: string[];
 };
 
 export type { Post };

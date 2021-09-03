@@ -13,14 +13,16 @@ import { selectUser } from '../features/userSlice';
 import { Post, User, Comment } from '../model/Models';
 import Swal from 'sweetalert2';
 import ExpandLessIcon from '@material-ui/icons/ExpandLess';
+import moment from 'moment';
 
 type Props = {
   post: Post;
   posts: Post[];
   setPosts: React.Dispatch<React.SetStateAction<Post[]>>;
+  handleCommentToggle: (id: number) => void;
 };
 
-export const TimelineComment: React.VFC<Props> = ({ post, posts, setPosts }) => {
+export const TimelineComment: React.VFC<Props> = ({ post, posts, setPosts, handleCommentToggle }) => {
   const classes = useStyles();
   const user = useSelector(selectUser);
 
@@ -47,18 +49,6 @@ export const TimelineComment: React.VFC<Props> = ({ post, posts, setPosts }) => 
     }
   };
 
-  const handleCommentToggle = (id: number) => {
-    const p: Post[] = posts.map((post: Post): Post => {
-      if (post.ID == id) {
-        post.OpenComment = !post.OpenComment;
-      } else {
-        post.OpenComment = false;
-      }
-      return post;
-    });
-    setPosts(p);
-  };
-
   const sendComment = (content: string, postId: number) => {
     axios
       .post(
@@ -74,7 +64,7 @@ export const TimelineComment: React.VFC<Props> = ({ post, posts, setPosts }) => 
         const comment: Comment = res.data.comment;
         const p: Post[] = posts.map((post: Post): Post => {
           if (post.ID == postId) {
-            post.Comments.unshift(comment);
+            post.Comments.push(comment);
           }
           return post;
         });
@@ -110,7 +100,7 @@ export const TimelineComment: React.VFC<Props> = ({ post, posts, setPosts }) => 
                 <ListItemText
                   disableTypography={false}
                   className={classes.text}
-                  primary={comment.User.Name}
+                  primary={`${comment.User.Name} ・ ${moment(comment.CreatedAt).fromNow()}`}
                   secondary={
                     <span className={classes.text}>
                       {comment.Content.split('\n').map((str, index) => (
@@ -141,6 +131,7 @@ const useStyles = makeStyles((theme: Theme) =>
       display: 'inline-block',
     },
     nested: {
+      marginTop: theme.spacing(2),
       paddingLeft: theme.spacing(4),
     },
     paper: {

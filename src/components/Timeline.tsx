@@ -7,7 +7,7 @@ import ListItemText from '@material-ui/core/ListItemText';
 import ListItemAvatar from '@material-ui/core/ListItemAvatar';
 import ListItemSecondaryAction from '@material-ui/core/ListItemSecondaryAction';
 import Avatar from '@material-ui/core/Avatar';
-import { Grid, Button, Icon, Badge, Chip } from '@material-ui/core';
+import { Grid, Button, Icon, Badge, Chip, Box } from '@material-ui/core';
 import IconButton from '@material-ui/core/IconButton';
 import TextsmsTwoToneIcon from '@material-ui/icons/TextsmsTwoTone';
 import ChatBubbleOutlineTwoToneIcon from '@material-ui/icons/ChatBubbleOutlineTwoTone';
@@ -20,12 +20,13 @@ import { useSelector } from 'react-redux';
 import { selectUser } from '../features/userSlice';
 import { Post, PostReaction } from '../model/Models';
 import { TimelineComment } from './TimelineComment';
+import moment from 'moment';
 
 export const Timeline: React.VFC = () => {
   const classes = useStyles();
   const [posts, setPosts] = useState<Post[] | []>([]);
   const user = useSelector(selectUser);
-  const emojis = ['smile', 'sweat_smile', 'rolling_on_the_floor_laughing', 'cry', 'rage', 'thumbsup', 'heart'];
+  const emojis = ['smile', 'cry', 'thumbsup', 'heart', 'cold_face', 'man-bowing', 'imp', 'white_flower', 'beers'];
 
   const config = {
     headers: {
@@ -35,20 +36,26 @@ export const Timeline: React.VFC = () => {
   };
 
   useEffect(() => {
+    let isMount = true;
     const config = {
       headers: {
         Token: user.token,
         'User-Id': user.id,
       },
     };
-    const getPosts = () => {
+    const getPosts = async () => {
       axios.get('/api/get-posts/', config).then((res) => {
-        setPosts(res.data.posts);
+        if (isMount) {
+          setPosts(res.data.posts);
+        }
       });
     };
     if (user.token) {
       getPosts();
     }
+    return () => {
+      isMount = false;
+    };
   }, [user]);
 
   const handleCommentToggle = (id: number) => {
@@ -65,7 +72,7 @@ export const Timeline: React.VFC = () => {
 
   const emojiId = 'simple-popover';
 
-  const handleEmojiClick = (event: React.MouseEvent<HTMLButtonElement>, postId: number) => {
+  const handleEmojiClick = (event: React.MouseEvent<HTMLDivElement | HTMLButtonElement>, postId: number) => {
     const p: Post[] = posts.map((post: Post): Post => {
       if (post.ID == postId) {
         post.AnchorEl = event.currentTarget;
@@ -74,6 +81,7 @@ export const Timeline: React.VFC = () => {
     });
     setPosts(p);
   };
+
   const handleEmojiClose = (postId: number) => {
     const p: Post[] = posts.map((post: Post): Post => {
       if (post.ID == postId) {
@@ -83,13 +91,33 @@ export const Timeline: React.VFC = () => {
     });
     setPosts(p);
   };
-  const onEmojiClick = (emojiCode: string | undefined, postId: number) => {
-    if (emojiId === undefined) {
-      return;
-    }
+
+  const deleteEmoji = (reactionId: number, postId: number) => {
     axios
       .post(
-        'api/create-reaction/',
+        '/api/delete-reaction/',
+        {
+          reactionId,
+        },
+        config,
+      )
+      .then(() => {
+        const p: Post[] = posts.map((post: Post): Post => {
+          if (post.ID == postId) {
+            post.PostReactions = post.PostReactions.filter((reaction): boolean => {
+              return reaction.ID !== reactionId;
+            });
+          }
+          return post;
+        });
+        setPosts(p);
+      });
+  };
+
+  const addEmoji = (emojiCode: string, postId: number) => {
+    axios
+      .post(
+        '/api/create-reaction',
         {
           emojiCode,
           userId: Number(user.id),
@@ -109,11 +137,36 @@ export const Timeline: React.VFC = () => {
       });
   };
 
+  const onEmojiClick = (emojiCode: string | undefined, postId: number) => {
+    handleEmojiClose(postId);
+    const post = posts.filter((p) => p.ID === postId)[0];
+    const reaction = post.PostReactions.filter(
+      (reaction) => reaction.EmojiCode === emojiCode && reaction.UserID == user.id,
+    )[0];
+    if (reaction) {
+      return deleteEmoji(reaction.ID, postId);
+    }
+
+    if (emojiCode === undefined) {
+      return;
+    }
+    return addEmoji(emojiCode, postId);
+  };
+
+  const onReactionClick = (reactionId: number, emojiCode: string, isMine: boolean, postId: number) => {
+    if (!isMine) {
+      return addEmoji(emojiCode, postId);
+    } else {
+      return deleteEmoji(reactionId, postId);
+    }
+  };
+
   return (
     <Grid container component="main" className={classes.root}>
       <div className={classes.title}>Timeline</div>
       <List className={classes.root}>
         {posts.map((post: Post) => {
+          post.Emojis = [];
           return (
             <div key={post.ID}>
               <ListItem alignItems="flex-start" key={post.ID} className={classes.contentList}>
@@ -123,7 +176,7 @@ export const Timeline: React.VFC = () => {
                 <ListItemText
                   disableTypography={false}
                   className={classes.text}
-                  primary={post.User.Name}
+                  primary={`${post.User.Name} ・ ${moment(post.CreatedAt).fromNow()}`}
                   secondary={
                     <span className={classes.text}>
                       {post.Content.split('\n').map((str, index) => (
@@ -136,9 +189,6 @@ export const Timeline: React.VFC = () => {
                   }
                 />
                 <ListItemSecondaryAction>
-                  <IconButton edge="end" aria-label="comments" onClick={(e) => handleEmojiClick(e, post.ID)}>
-                    <EmojiEmotionsOutlinedIcon />
-                  </IconButton>
                   <IconButton onClick={() => handleCommentToggle(post.ID)}>
                     <Badge badgeContent={post.Comments.length} color="primary">
                       {post.OpenComment ? <TextsmsTwoToneIcon /> : <ChatBubbleOutlineTwoToneIcon />}
@@ -150,30 +200,47 @@ export const Timeline: React.VFC = () => {
                 <ListItemAvatar>
                   <Avatar alt="Remy Sharp" src="/dummy.png" />
                 </ListItemAvatar>
-                {post.PostReactions.map((reaction) => {
-                  return (
-                    <div key={reaction.ID}>
-                      <Chip
-                        variant="outlined"
-                        className={classes.emojiReaction}
-                        avatar={
-                          <Emoji
-                            emoji={reaction.EmojiCode}
-                            size={20}
-                            onClick={(emoji) => alert(JSON.stringify(emoji))}
+                <Box flexWrap="wrap" display="flex">
+                  {post.PostReactions.map((reaction) => {
+                    post.Emojis.push(reaction.EmojiCode);
+                    if (post.Emojis.filter((emoji) => emoji == reaction.EmojiCode).length > 1) {
+                      return;
+                    } else {
+                      return (
+                        <div key={reaction.ID} className={classes.emojipd}>
+                          <Chip
+                            variant={reaction.UserID == user.id ? 'outlined' : 'outlined'}
+                            className={classes.emojiReaction}
+                            color={reaction.UserID == user.id ? 'primary' : 'default'}
+                            avatar={<Emoji emoji={reaction.EmojiCode} size={20} />}
+                            label={post.PostReactions.filter((react) => react.EmojiCode === reaction.EmojiCode).length}
+                            onClick={() =>
+                              onReactionClick(reaction.ID, reaction.EmojiCode, reaction.UserID == user.id, post.ID)
+                            }
                           />
-                        }
-                        label={post.PostReactions.length}
-                        // onClick={handleClick}
-                      />
-                    </div>
-                  );
-                })}
+                        </div>
+                      );
+                    }
+                  })}
+                  <div className={classes.emojipd}>
+                    <Chip
+                      variant="outlined"
+                      className={classes.emojiAdd}
+                      avatar={<EmojiEmotionsOutlinedIcon />}
+                      onClick={(e) => handleEmojiClick(e, post.ID)}
+                    />
+                  </div>
+                </Box>
               </ListItem>
-              <TimelineComment post={post} setPosts={setPosts} posts={posts} />
+              <TimelineComment
+                post={post}
+                setPosts={setPosts}
+                posts={posts}
+                handleCommentToggle={handleCommentToggle}
+              />
               <Divider variant="inset" component="li" />
               <Popover
-                id={String(post.ID)}
+                id={post.AnchorEl ? 'simple-popover' : undefined}
                 open={Boolean(post.AnchorEl)}
                 anchorEl={post.AnchorEl}
                 onClose={() => handleEmojiClose(post.ID)}
@@ -245,6 +312,13 @@ const useStyles = makeStyles((theme: Theme) =>
     },
     emojiReaction: {
       paddingLeft: theme.spacing(1),
+    },
+    emojiAdd: {
+      paddingLeft: theme.spacing(1.5),
+    },
+    emojipd: {
+      paddingRight: theme.spacing(0.5),
+      paddingBottom: theme.spacing(0.5),
     },
   }),
 );
