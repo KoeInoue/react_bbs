@@ -16,6 +16,7 @@ import { Timeline } from './Timeline';
 import { CreatePost } from './CreatePost';
 import { Profile } from './Profile';
 import { useParams, RouteComponentProps } from 'react-router-dom';
+import SwapHorizIcon from '@material-ui/icons/SwapHoriz';
 
 type Props = {
   match: RouteComponentProps['match'];
@@ -86,7 +87,7 @@ export const Home: React.VFC<Props> = (props) => {
               props.history.push('/post');
               break;
             case 2:
-              props.history.push('/profile');
+              props.history.push('/concurrency');
               break;
 
             default:
@@ -98,7 +99,7 @@ export const Home: React.VFC<Props> = (props) => {
       >
         <BottomNavigationAction label="Home" icon={<HomeIcon />} />
         <BottomNavigationAction label="Post" icon={<PostAddIcon />} />
-        <BottomNavigationAction label="Profile" icon={<PersonIcon />} />
+        <BottomNavigationAction label="Concurrency" icon={<SwapHorizIcon />} />
       </BottomNavigation>
     </Grid>
   );

@@ -48,7 +48,7 @@ const App: React.VFC = (props) => {
             <Switch>
               <Route exact path="/home" render={(props) => <Home page={0} {...props} />}></Route>
               <Route path="/post" render={(props) => <Home page={1} {...props} />}></Route>
-              <Route path="/profile" render={(props) => <Home page={2} {...props} />}></Route>
+              <Route path="/concurrency" render={(props) => <Home page={2} {...props} />}></Route>
               <Route>
                 <Redirect to="/home" />
               </Route>

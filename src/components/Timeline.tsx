@@ -21,6 +21,7 @@ import { selectUser } from '../features/userSlice';
 import { Post, PostReaction } from '../model/Models';
 import { TimelineComment } from './TimelineComment';
 import moment from 'moment';
+import MoreHorizIcon from '@material-ui/icons/MoreHoriz';
 
 export const Timeline: React.VFC = () => {
   const classes = useStyles();
@@ -189,6 +190,11 @@ export const Timeline: React.VFC = () => {
                   }
                 />
                 <ListItemSecondaryAction>
+                  {post.UserID == user.id && (
+                    <IconButton onClick={() => handleCommentToggle(post.ID)}>
+                      <MoreHorizIcon />
+                    </IconButton>
+                  )}
                   <IconButton onClick={() => handleCommentToggle(post.ID)}>
                     <Badge badgeContent={post.Comments.length} color="primary">
                       {post.OpenComment ? <TextsmsTwoToneIcon /> : <ChatBubbleOutlineTwoToneIcon />}
