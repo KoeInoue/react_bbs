@@ -1,21 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { logout } from '../features/userSlice';
-import { useSelector, useDispatch } from 'react-redux';
-import axios from '../common/axios';
+import { useDispatch } from 'react-redux';
 import { makeStyles } from '@material-ui/core/styles';
-import { Avatar, CssBaseline, TextField, Paper, Grid, BottomNavigation, Container } from '@material-ui/core';
+import { Grid, BottomNavigation } from '@material-ui/core';
 import BottomNavigationAction from '@material-ui/core/BottomNavigationAction';
 import HomeIcon from '@material-ui/icons/Home';
 import PostAddIcon from '@material-ui/icons/PostAdd';
-import PersonIcon from '@material-ui/icons/Person';
 import AppBar from '@material-ui/core/AppBar';
 import Toolbar from '@material-ui/core/Toolbar';
 import Typography from '@material-ui/core/Typography';
 import Button from '@material-ui/core/Button';
 import { Timeline } from './Timeline';
 import { CreatePost } from './CreatePost';
-import { Profile } from './Profile';
-import { useParams, RouteComponentProps } from 'react-router-dom';
+import { Profile } from './Concurrency';
+import { RouteComponentProps } from 'react-router-dom';
 import SwapHorizIcon from '@material-ui/icons/SwapHoriz';
 
 type Props = {

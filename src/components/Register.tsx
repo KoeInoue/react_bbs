@@ -35,7 +35,7 @@ export const Register: React.VFC<propTypes> = (props) => {
         text: errors.token,
         icon: 'error',
         confirmButtonText: 'Register Again',
-      }).then((result) => {
+      }).then(() => {
         window.location.href = '/';
       });
     }
@@ -131,11 +131,7 @@ export const Register: React.VFC<propTypes> = (props) => {
               color="primary"
               className={classes.submit}
               onClick={async () => {
-                try {
-                  await signUp();
-                } catch (error) {
-                  alert(error.message);
-                }
+                await signUp();
               }}
             >
               Register

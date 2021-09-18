@@ -6,7 +6,7 @@ import Button from '@material-ui/core/Button';
 import axios from '../common/axios';
 import { selectUser } from '../features/userSlice';
 import { useSelector } from 'react-redux';
-import { useParams, RouteComponentProps } from 'react-router-dom';
+import { RouteComponentProps } from 'react-router-dom';
 import Swal from 'sweetalert2';
 
 type Props = {

@@ -7,7 +7,7 @@ import ListItemText from '@material-ui/core/ListItemText';
 import ListItemAvatar from '@material-ui/core/ListItemAvatar';
 import ListItemSecondaryAction from '@material-ui/core/ListItemSecondaryAction';
 import Avatar from '@material-ui/core/Avatar';
-import { Grid, Button, Icon, Badge, Chip, Box } from '@material-ui/core';
+import { Grid, Badge, Chip, Box } from '@material-ui/core';
 import IconButton from '@material-ui/core/IconButton';
 import TextsmsTwoToneIcon from '@material-ui/icons/TextsmsTwoTone';
 import ChatBubbleOutlineTwoToneIcon from '@material-ui/icons/ChatBubbleOutlineTwoTone';

@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { selectUser } from '../features/userSlice';
 import { createStyles, Theme, makeStyles } from '@material-ui/core/styles';
-import { Grid, TextField, Button, FormGroup, FormControlLabel, Switch } from '@material-ui/core';
+import { Grid, TextField, Button, Switch } from '@material-ui/core';
 import moment from 'moment';
 import axios from '../common/axios';
 import { CalcResult } from '../model/Models';

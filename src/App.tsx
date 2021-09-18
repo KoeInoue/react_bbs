@@ -1,13 +1,12 @@
-import React, { useEffect, useContext } from 'react';
+import React, { useEffect } from 'react';
 import styles from './App.module.css';
 import { useSelector, useDispatch } from 'react-redux';
-import { selectUser, login, logout } from './features/userSlice';
+import { selectUser, login } from './features/userSlice';
 import { BrowserRouter, Route, Switch, Link, Redirect } from 'react-router-dom';
 import { TransitionGroup, CSSTransition } from 'react-transition-group';
 import { Home } from './components/Home';
 import { Auth } from './components/Auth';
 import { Register } from './components/Register';
-import { useCookies } from 'react-cookie';
 
 const App: React.VFC = (props) => {
   const user = useSelector(selectUser);

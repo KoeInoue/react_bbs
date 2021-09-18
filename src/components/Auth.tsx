@@ -167,18 +167,10 @@ export const Auth: React.VFC<propTypes> = (props) => {
                 onClick={
                   isLoggedIn
                     ? async () => {
-                        try {
-                          await signIn();
-                        } catch (error) {
-                          alert(error.message);
-                        }
+                        await signIn();
                       }
                     : async () => {
-                        try {
-                          await signUp();
-                        } catch (error) {
-                          alert(error.message);
-                        }
+                        await signUp();
                       }
                 }
               >
@@ -232,4 +224,5 @@ const useStyles = makeStyles((theme) => ({
     fontSize: '20px',
   },
 }));
+
 export default Auth;
