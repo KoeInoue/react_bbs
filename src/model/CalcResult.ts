@@ -3,7 +3,7 @@ type CalcResult = {
   PrimeNumbers: number[];
   NewsTitle: string;
   NewsUrl: string;
-  WhatDay: string;
+  Wheather: string;
 };
 
 export type { CalcResult };

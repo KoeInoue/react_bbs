@@ -10,7 +10,8 @@ import { CalcResult } from '../model/Models';
 export const Profile: React.FC = () => {
   const classes = useStyles();
   const user = useSelector(selectUser);
-  const [date, setDate] = useState('');
+  const [date, setDate] = useState(moment().format('YYYY-MM-DD'));
+  const [isSending, setIsSending] = useState(false);
   const [isConcurrent, setIsConcurrent] = useState(false);
   const [result, setResult] = useState<CalcResult | null>();
 
@@ -33,19 +34,23 @@ export const Profile: React.FC = () => {
     if (!date) {
       return alert('日付を入れてください');
     }
+    setResult(null);
     const path = isConcurrent ? 'calc-concurrently' : 'calc-series';
     const name = isConcurrent ? '並行' : '通常';
     const fmtDate = moment(date).format('YYYY-MM-DD');
 
     config.params = { date: fmtDate };
+    setIsSending(true);
     axios
       .get(`/api/${path}/`, config)
       .then((res) => {
         console.log(`${name}`, res.data.result.Spent, 's');
         setResult(res.data.result);
+        setIsSending(false);
       })
       .catch(() => {
         alert('error');
+        setIsSending(false);
       });
   };
 
@@ -54,14 +59,15 @@ export const Profile: React.FC = () => {
       <div className={classes.root}>
         <div className={classes.title}>Concurrency</div>
         <div className={classes.center}>
-          並行
+          並行性
           <Switch checked={isConcurrent} onChange={handleChange} name="checkedB" color="primary" />
         </div>
         <div className={classes.center}>
           <TextField
             id="datetime-local"
-            label="Next appointment"
-            type="datetime-local"
+            label="News Date"
+            type="date"
+            defaultValue={moment().format('YYYY-MM-DD')}
             onChange={handleDate}
             className={classes.textField}
             InputLabelProps={{
@@ -70,26 +76,37 @@ export const Profile: React.FC = () => {
           />
         </div>
         <div className={classes.res}>
-          <Button variant="contained" color="primary" onClick={sendDate}>
-            Send
+          <Button variant="contained" color="primary" onClick={sendDate} disabled={isSending}>
+            Start
           </Button>
         </div>
-        <div className={classes.center}>
-          <b>2〜1000までの素数を列挙</b>
-        </div>
-        <div className={classes.res}>{result ? result.PrimeNumbers.join(',') : '--'}</div>
-        <div className={classes.center}>
-          <b>この日のニュース</b>
-        </div>
-        <div className={classes.res}>{result ? <a href={result.NewsUrl}>{result.NewsTitle}</a> : '--'}</div>
-        <div className={classes.center}>
-          <b>何の日</b>
-        </div>
-        <div className={classes.res}>--</div>
-        <div className={classes.center}>
-          <b>上記の処理にかかった時間</b>
-        </div>
-        <div className={classes.res}>{result ? `${result.Spent}s` : '--'}</div>
+        {isSending ? (
+          <Grid container alignItems="center" justifyContent="center">
+            <div className={classes.center}>Loading...</div>
+          </Grid>
+        ) : (
+          <Grid>
+            <div className={classes.center}>
+              <b>2〜1000までの素数を列挙</b>
+            </div>
+            <div className={classes.res}>{result ? result.PrimeNumbers.join(',') : '--'}</div>
+
+            <div className={classes.center}>
+              <b>この日のニュース</b>
+            </div>
+            <div className={classes.res}>{result ? <a href={result.NewsUrl}>{result.NewsTitle}</a> : '--'}</div>
+
+            <div className={classes.center}>
+              <b>今日の天気</b>
+            </div>
+            <div className={classes.res}>{result ? result.Wheather : '--'}</div>
+
+            <div className={classes.center}>
+              <b>上記の処理にかかった時間</b>
+            </div>
+            <div className={classes.res}>{result ? `${result.Spent}s` : '--'}</div>
+          </Grid>
+        )}
       </div>
     </Grid>
   );
