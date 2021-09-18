@@ -52,7 +52,7 @@ export const TimelineComment: React.VFC<Props> = ({ post, posts, setPosts, handl
   const sendComment = (content: string, postId: number) => {
     axios
       .post(
-        'api/create-comment/',
+        '/api/create-comment/',
         {
           content,
           userId: Number(user.id),

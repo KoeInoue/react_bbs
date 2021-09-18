@@ -21,7 +21,9 @@ import { selectUser } from '../features/userSlice';
 import { Post, PostReaction } from '../model/Models';
 import { TimelineComment } from './TimelineComment';
 import moment from 'moment';
-import MoreHorizIcon from '@material-ui/icons/MoreHoriz';
+import DeleteIcon from '@material-ui/icons/Delete';
+import EditOutlined from '@material-ui/icons/EditOutlined';
+import Swal from 'sweetalert2';
 
 export const Timeline: React.VFC = () => {
   const classes = useStyles();
@@ -45,7 +47,7 @@ export const Timeline: React.VFC = () => {
       },
     };
     const getPosts = async () => {
-      axios.get('/api/get-posts/', config).then((res) => {
+      await axios.get('/api/get-posts/', config).then((res) => {
         if (isMount) {
           setPosts(res.data.posts);
         }
@@ -70,8 +72,6 @@ export const Timeline: React.VFC = () => {
     });
     setPosts(p);
   };
-
-  const emojiId = 'simple-popover';
 
   const handleEmojiClick = (event: React.MouseEvent<HTMLDivElement | HTMLButtonElement>, postId: number) => {
     const p: Post[] = posts.map((post: Post): Post => {
@@ -162,6 +162,91 @@ export const Timeline: React.VFC = () => {
     }
   };
 
+  const handleDelete = (postId: number) => {
+    Swal.fire({
+      icon: 'warning',
+      title: 'Are you sure?',
+      showConfirmButton: true,
+      confirmButtonColor: 'red',
+      showCancelButton: true,
+    }).then((res) => {
+      if (res.isConfirmed) {
+        deletePost(postId);
+      }
+    });
+  };
+
+  const deletePost = (postId: number) => {
+    axios
+      .post(
+        '/api/delete-post/',
+        {
+          postId,
+        },
+        config,
+      )
+      .then(() => {
+        const p: Post[] = posts.filter((post: Post): boolean => {
+          return post.ID !== postId;
+        });
+        setPosts(p);
+        Swal.fire({
+          position: 'bottom-end',
+          icon: 'success',
+          title: 'Your post was deleted',
+          showConfirmButton: false,
+          toast: true,
+          timer: 1500,
+        });
+      });
+  };
+
+  const hundlePostEdit = async (postId: number, postContent: string) => {
+    const { value: text } = await Swal.fire({
+      input: 'textarea',
+      inputLabel: 'Edit your post',
+      inputValue: postContent,
+      inputPlaceholder: 'Type your message here...',
+      inputAttributes: {
+        'aria-label': 'Type your message here',
+      },
+      confirmButtonText: 'Edit',
+    });
+
+    if (text) {
+      editPost(text, postId);
+    }
+  };
+
+  const editPost = (text: string, postId: number) => {
+    axios
+      .post(
+        '/api/edit-post/',
+        {
+          postId,
+          postContent: text,
+        },
+        config,
+      )
+      .then(() => {
+        const p: Post[] = posts.map((post: Post): Post => {
+          if (post.ID == postId) {
+            post.Content = text;
+          }
+          return post;
+        });
+        setPosts(p);
+        Swal.fire({
+          position: 'bottom-end',
+          icon: 'success',
+          title: 'Your post was edited',
+          showConfirmButton: false,
+          toast: true,
+          timer: 1500,
+        });
+      });
+  };
+
   return (
     <Grid container component="main" className={classes.root}>
       <div className={classes.title}>Timeline</div>
@@ -191,8 +276,13 @@ export const Timeline: React.VFC = () => {
                 />
                 <ListItemSecondaryAction>
                   {post.UserID == user.id && (
-                    <IconButton onClick={() => handleCommentToggle(post.ID)}>
-                      <MoreHorizIcon />
+                    <IconButton onClick={() => hundlePostEdit(post.ID, post.Content)}>
+                      <EditOutlined />
+                    </IconButton>
+                  )}
+                  {post.UserID == user.id && (
+                    <IconButton onClick={() => handleDelete(post.ID)}>
+                      <DeleteIcon />
                     </IconButton>
                   )}
                   <IconButton onClick={() => handleCommentToggle(post.ID)}>
@@ -291,7 +381,7 @@ const useStyles = makeStyles((theme: Theme) =>
       display: 'inline-block',
     },
     title: {
-      paddingTop: '15px',
+      paddingTop: '30px',
       paddingLeft: '15px',
       fontSize: '16px',
       fontWeight: 'bold',

@@ -95,7 +95,7 @@ const useStyles = makeStyles((theme: Theme) =>
       width: '80%',
     },
     title: {
-      margin: '15px',
+      margin: '30px',
       fontSize: '16px',
       fontWeight: 'bold',
     },

@@ -120,7 +120,7 @@ const useStyles = makeStyles((theme: Theme) =>
       marginBottom: theme.spacing(5),
     },
     title: {
-      paddingTop: '15px',
+      paddingTop: '30px',
       paddingLeft: '15px',
       fontSize: '16px',
       fontWeight: 'bold',
